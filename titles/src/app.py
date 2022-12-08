@@ -13,23 +13,17 @@ dynamodb_client = boto3.client('dynamodb')
 TITLES_TABLE = os.environ.get('TITLES_TABLE', 'titles')
 
 def handle(event, context):
-    logger.info("Request: %s", event)
+    #logger.info("Authorization: %s", headers['Authorization'])
     response_body = {'error': 'Unprocessable Entity'}
     response_code = 422
     body = event.get('body')
     headers = event.get('headers')
     logger.info("Headers: %s", headers)
-    #logger.info("Authorization: %s", headers['Authorization'])
-    try:
-        # decodedToken = jwt.decode(headers['Authorization'], algorithms=["RS256"], options={"verify_signature": False})
-        if validate_fields(json.loads(body)):
-            list_titles = json.loads(body)
-            for title in list_titles:
-                save_title(title)
-            response_body = {'list': 'ok', 'count': list_titles.__len__() } #, 'username': decodedToken["cognito:username"]}
-            response_code = 200
-    except Exception as e:
-        logger.error("Error: %s", e)
+
+    if body:
+        response_body, response_code = request_post(body, headers)
+    else:
+        response_body, response_code = request_get(body, headers)
 
     response = {
         'headers': {
@@ -44,6 +38,40 @@ def handle(event, context):
 
     logger.info("Response: %s", response)
     return response
+
+def request_get(body, headers):
+    try:
+        titles = []
+        response = dynamodb_client.scan(
+            TableName=TITLES_TABLE
+        )
+        for item in response['Items']:
+            titles.append({
+                'text': item['text']['S'],
+                'price': item['price']['S'],
+                'symbol': item['symbol']['S'],
+                'url': item['url']['S'],
+                'type': item['type']['S'],
+                'date': item['date']['S']
+            })
+        response_body = titles
+        response_code = 200
+    except Exception as e:
+        logger.error("Error: %s", e)
+    return response_body, response_code
+
+def request_post(body, headers):
+    try:
+        # decodedToken = jwt.decode(headers['Authorization'], algorithms=["RS256"], options={"verify_signature": False})
+        if validate_fields(json.loads(body)):
+            list_titles = json.loads(body)
+            for title in list_titles:
+                save_title(title)
+            response_body = {'list': 'ok', 'count': list_titles.__len__() } #, 'username': decodedToken["cognito:username"]}
+            response_code = 200
+    except Exception as e:
+        logger.error("Error: %s", e)
+    return response_body, response_code
 
 def save_title(title):
     if not os.environ.get('IS_OFFLINE'):
