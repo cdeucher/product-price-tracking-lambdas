@@ -14,8 +14,6 @@ TITLES_TABLE = os.environ.get('TITLES_TABLE', 'titles')
 
 def handle(event, context):
     #logger.info("Authorization: %s", headers['Authorization'])
-    response_body = {'error': 'Unprocessable Entity'}
-    response_code = 422
     body = event.get('body')
     headers = event.get('headers')
     logger.info("Headers: %s", headers)
@@ -40,6 +38,8 @@ def handle(event, context):
     return response
 
 def request_get(body, headers):
+    response_body = {'error': 'Unprocessable Entity'}
+    response_code = 422
     try:
         titles = []
         response = dynamodb_client.scan(
@@ -52,7 +52,8 @@ def request_get(body, headers):
                 'symbol': item['symbol']['S'],
                 'url': item['url']['S'],
                 'type': item['type']['S'],
-                'date': item['date']['S']
+                'date': item['date']['S'],
+                'price_target': item['price_target']['S']
             })
         response_body = titles
         response_code = 200
@@ -61,6 +62,8 @@ def request_get(body, headers):
     return response_body, response_code
 
 def request_post(body, headers):
+    response_body = {'error': 'Unprocessable Entity'}
+    response_code = 422
     try:
         # decodedToken = jwt.decode(headers['Authorization'], algorithms=["RS256"], options={"verify_signature": False})
         if validate_fields(json.loads(body)):
@@ -79,12 +82,13 @@ def save_title(title):
         dynamodb_client.put_item(
             TableName=TITLES_TABLE,
             Item={
-                'text': {'S': title['text']},
-                'price': {'S': title['price']},
-                'symbol': {'S': title['symbol']},
+                'text': {'S': 'comming soon'},
+                'price': {'S': ''},
+                'symbol': {'S': ''},
                 'url': {'S': title['url']},
-                'type': {'S': title['type']},
-                'date': {'S': date_now}
+                'type': {'S': ''},
+                'date': {'S': date_now},
+                'price_target': {'S': title['price_target']}
             }
         )
     #if os.environ.get('IS_OFFLINE'):
@@ -98,7 +102,7 @@ def validate_fields(body_elements):
     if type(body_elements) is not list:
         return False
 
-    list_fields = ['text', 'price', 'symbol', 'url', 'type']
+    list_fields = ['url', 'price_target']
 
     for elements in body_elements:
         for key in elements:
