@@ -47,7 +47,7 @@ def request_get(body, headers):
         )
         for item in response['Items']:
             titles.append({
-                'text': item['text']['S'],
+                'title': item['title']['S'],
                 'price': item['price']['S'],
                 'symbol': item['symbol']['S'],
                 'url': item['url']['S'],
@@ -82,7 +82,9 @@ def save_title(title):
         dynamodb_client.put_item(
             TableName=TITLES_TABLE,
             Item={
-                'text': {'S': 'comming soon'},
+                'id': {'S': date_now},
+                'site': {'S': title['url']},
+                'title': {'S': 'comming soon'},
                 'price': {'S': ''},
                 'symbol': {'S': ''},
                 'url': {'S': title['url']},

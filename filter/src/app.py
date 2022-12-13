@@ -4,12 +4,14 @@ import json
 import logging
 import requests
 from bs4 import BeautifulSoup
+from lxml import etree
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = logging.getLogger("lambda")
+logger.setLevel(logging.INFO) #INFO
 
 TITLES_TABLE = os.environ.get('TITLES_TABLE', 'titles')
-table = boto3.resource('dynamodb').Table(TITLES_TABLE)
+if TITLES_TABLE:
+    table = boto3.resource('dynamodb').Table(TITLES_TABLE)
 
 def handle(event, context):
     logger.info("exec_filter %s", event)
@@ -18,13 +20,15 @@ def handle(event, context):
 
     if validate_fields(event):
         for record in event['Records']:
-            logger.info("record %s %s %s", record['eventID'], record['eventName'], record['dynamodb']['OldImage'])
-            logger.info("record - url %s", record['dynamodb']['OldImage']['url']['S'])
-            url = record['dynamodb']['OldImage']['url']['S']
+            if 'OldImage' in record['dynamodb'] :
+                url = record['dynamodb']['OldImage']['url']['S']
+            else:
+                url = record['dynamodb']['NewImage']['url']['S']
 
             page = get_html_page(url)
-            page_title = scrape_html(page)
-            update_dynamo('url',url, page_title)
+            logger.info("page %s", page)
+            price, title = scrape_html(page.text)
+            update_dynamo(url, price, title)
 
         response_code = 200
         response_body = callback()
@@ -39,23 +43,35 @@ def handle(event, context):
 
 def get_html_page(url):
     logger.info("get_html_page %s", url)
-    return requests.get(url)
+    HEADERS = ({'User-Agent':
+                'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
+                (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36',\
+                'Accept-Language': 'en-US, en;q=0.5'})
+    return requests.get(url,headers=HEADERS)
 
-def scrape_html(html):
-    soup = BeautifulSoup(html.text, 'html.parser')
-    page_title = soup.title
-    logger.info("page title %s", soup.title)
-    product_title = soup.find('span', {'id': 'productTitle'})
-    logger.info("product_title %s", product_title)
-    return page_title
+def scrape_html(webpage):
+    soup = BeautifulSoup(webpage, "html.parser")
+    dom = etree.HTML(str(soup))
 
-def update_dynamo(item_key, value, page_title):
-    table.update_item(
-        Key={item_key: value},
-        AttributeUpdates={
-            'text': page_title,
+    price = dom.xpath('//*[@class="a-price-whole"]')[0].text
+    title = dom.xpath('//*[@id="productTitle"]')[0].text
+    logger.info("%s %s", price, title)
+    return price, title
+
+def update_dynamo(url, price, title):
+    logger.info("update_item text:%s", title)
+    update = table.update_item(
+        Key={
+           'site': url,
         },
+        UpdateExpression="set title = :g, price = :p",
+        ExpressionAttributeValues={
+            ':g': title, ':p': price
+        },
+        ReturnValues="UPDATED_NEW"
     )
+    logger.info("update %s", update)
+    return update
 
 def callback():
     response_body = {'message': 'Hello, World!'}
@@ -72,3 +88,8 @@ def validate_fields(events_elements):
     if type(events_elements['Records']) is not list or len(events_elements['Records']) == 0:
         return False
     return True
+
+if __name__ == '__main__':
+    page = get_html_page("https://www.amazon.com.br/Controle-DualSenseTM-Edi%C3%A7%C3%A3o-limitada-Ragnarok/dp/B0BL1WCP2K")
+    price, title = scrape_html(page.text)
+    logger.error("%s %s", price, title)

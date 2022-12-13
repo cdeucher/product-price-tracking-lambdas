@@ -1,4 +1,4 @@
-import filter
+import app
 import pytest
 import simplejson as json
 
