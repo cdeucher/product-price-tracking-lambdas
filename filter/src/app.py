@@ -10,8 +10,10 @@ logger = logging.getLogger("lambda")
 logger.setLevel(logging.INFO) #INFO
 
 TITLES_TABLE = os.environ.get('TITLES_TABLE', 'titles')
+SUB_LAMBDA   = os.environ.get('SUB_LAMBDA', '')
 if TITLES_TABLE:
     table = boto3.resource('dynamodb').Table(TITLES_TABLE)
+    lambda_client = boto3.client('lambda')
 
 def handle(event, context):
     logger.info("exec_filter %s", event)
@@ -21,17 +23,19 @@ def handle(event, context):
     if validate_fields(event):
         for record in event['Records']:
             if 'OldImage' in record['dynamodb'] :
-                url = record['dynamodb']['OldImage']['url']['S']
+                d_data = record['dynamodb']['OldImage']
             else:
-                url = record['dynamodb']['NewImage']['url']['S']
-
+                d_data = record['dynamodb']['NewImage']
+            url = d_data['url']['S']
+            logger.info("url %s", url)
             page = get_html_page(url)
             logger.info("page %s", page)
             price, title = scrape_html(page.text)
-            update_dynamo(url, price, title)
+            item = update_dynamo(url, price, title)
+            call_lambda(SUB_LAMBDA, d_data['SequenceNumber'])
 
         response_code = 200
-        response_body = callback()
+        response_body = {'message': price + " " + title}
 
     response = {
         'statusCode': response_code,
@@ -73,11 +77,15 @@ def update_dynamo(url, price, title):
     logger.info("update %s", update)
     return update
 
-def callback():
-    response_body = {'message': 'Hello, World!'}
-    logger.info("Response: %s", response_body)
-    return response_body
-
+def call_lambda(function_name, function_params):
+    logger.info("call_lambda %s", function_name)
+    response = lambda_client.invoke(
+        FunctionName=function_name,
+        InvocationType='Event',
+        Payload=json.dumps(function_params)
+    )
+    logger.info("call_lambda %s", response)
+    return response
 
 def validate_fields(events_elements):
     logger.info("validate_fields %s %s", events_elements, type(events_elements))
