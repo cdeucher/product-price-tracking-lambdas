@@ -8,9 +8,12 @@ from datetime import datetime;
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-dynamodb_client = boto3.client('dynamodb')
-
 TITLES_TABLE = os.environ.get('TITLES_TABLE', 'titles')
+SUB_LAMBDA   = os.environ.get('SUB_LAMBDA', '')
+if TITLES_TABLE:
+    dynamodb_client = boto3.client('dynamodb')
+if SUB_LAMBDA:
+    lambda_client = boto3.client('lambda')
 
 def handle(event, context):
     #logger.info("Authorization: %s", headers['Authorization'])
@@ -53,7 +56,8 @@ def request_get(body, headers):
                 'url': item['url']['S'],
                 'type': item['type']['S'],
                 'date': item['date']['S'],
-                'price_target': item['price_target']['S']
+                'price_target': item['price_target']['S'],
+                'event_id': item['event_id']['S'] if 'event_id' in item else ''
             })
         response_body = titles
         response_code = 200
@@ -79,7 +83,7 @@ def request_post(body, headers):
 def save_title(title):
     if not os.environ.get('IS_OFFLINE'):
         date_now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        dynamodb_client.put_item(
+        response = dynamodb_client.put_item(
             TableName=TITLES_TABLE,
             Item={
                 'id': {'S': date_now},
@@ -93,6 +97,7 @@ def save_title(title):
                 'price_target': {'S': title['price_target']}
             }
         )
+    # response['Item']['id']['S'])
     #if os.environ.get('IS_OFFLINE'):
     #    dynamodb_client = boto3.client(
     #        'dynamodb', region_name='localhost', endpoint_url='http://localhost:8000'
@@ -100,7 +105,6 @@ def save_title(title):
     return True
 
 def validate_fields(body_elements):
-    print(body_elements)
     if type(body_elements) is not list:
         return False
 

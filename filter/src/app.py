@@ -11,9 +11,11 @@ logger.setLevel(logging.INFO) #INFO
 
 TITLES_TABLE = os.environ.get('TITLES_TABLE', 'titles')
 SUB_LAMBDA   = os.environ.get('SUB_LAMBDA', '')
-if TITLES_TABLE:
-    table = boto3.resource('dynamodb').Table(TITLES_TABLE)
+
+if SUB_LAMBDA:
     lambda_client = boto3.client('lambda')
+
+table = boto3.resource('dynamodb').Table(TITLES_TABLE)
 
 def handle(event, context):
     logger.info("exec_filter %s", event)
@@ -31,8 +33,10 @@ def handle(event, context):
             page = get_html_page(url)
             logger.info("page %s", page)
             price, title = scrape_html(page.text)
-            item = update_dynamo(url, price, title)
-            call_lambda(SUB_LAMBDA, d_data['SequenceNumber'])
+            item = update_dynamo(url, price, title, record['eventID'])
+
+            event = { 'url':url, 'event_id': record['eventID'] }
+            call_lambda(SUB_LAMBDA, event)
 
         response_code = 200
         response_body = {'message': price + " " + title}
@@ -62,15 +66,15 @@ def scrape_html(webpage):
     logger.info("%s %s", price, title)
     return price, title
 
-def update_dynamo(url, price, title):
+def update_dynamo(url, price, title, event_id):
     logger.info("update_item text:%s", title)
     update = table.update_item(
         Key={
            'site': url,
         },
-        UpdateExpression="set title = :g, price = :p",
+        UpdateExpression="set title = :g, price = :p, event_id = :i",
         ExpressionAttributeValues={
-            ':g': title, ':p': price
+            ':g': title, ':p': price, ':i': event_id
         },
         ReturnValues="UPDATED_NEW"
     )
