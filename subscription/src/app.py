@@ -12,7 +12,7 @@ AWS_REGION = "us-east-1"
 sns_client = boto3.client("sns", region_name=AWS_REGION)
 
 def handle(event, context):
-    logger.error("Event: %s", event)
+    logger.info(f'Event: {event}')
 
     response_body, response_code = { 'message': 'ok' }, 200
 
@@ -33,7 +33,7 @@ def handle(event, context):
     return response
 
 def create_topic(event):
-    name = event.get('event_id')
+    name = event.get('id')
     topic = 'Could not create SNS topic '+name
     try:
         topic = sns_client.create_topic(Name=name)

@@ -28,15 +28,13 @@ def handle(event, context):
                 d_data = record['dynamodb']['OldImage']
             else:
                 d_data = record['dynamodb']['NewImage']
-            url = d_data['url']['S']
+            url  = d_data['url']['S']
+            id   = d_data['id']['S']
             logger.info("url %s", url)
             page = get_html_page(url)
             logger.info("page %s", page)
             price, title = scrape_html(page.text)
-            item = update_dynamo(url, price, title, record['eventID'])
-
-            event = { 'url':url, 'event_id': record['eventID'] }
-            call_lambda(SUB_LAMBDA, event)
+            item = update_dynamo(url, price, title, id,record['eventID'])
 
         response_code = 200
         response_body = {'message': price + " " + title}
@@ -66,11 +64,12 @@ def scrape_html(webpage):
     logger.info("%s %s", price, title)
     return price, title
 
-def update_dynamo(url, price, title, event_id):
+def update_dynamo(url, price, title, id, event_id):
     logger.info("update_item text:%s", title)
     update = table.update_item(
         Key={
            'site': url,
+           'id': id
         },
         UpdateExpression="set title = :g, price = :p, event_id = :i",
         ExpressionAttributeValues={
@@ -80,16 +79,6 @@ def update_dynamo(url, price, title, event_id):
     )
     logger.info("update %s", update)
     return update
-
-def call_lambda(function_name, function_params):
-    logger.info("call_lambda %s", function_name)
-    response = lambda_client.invoke(
-        FunctionName=function_name,
-        InvocationType='Event',
-        Payload=json.dumps(function_params)
-    )
-    logger.info("call_lambda %s", response)
-    return response
 
 def validate_fields(events_elements):
     logger.info("validate_fields %s %s", events_elements, type(events_elements))
