@@ -17,7 +17,7 @@ if SUB_LAMBDA:
 
 table = boto3.resource('dynamodb').Table(TITLES_TABLE)
 
-def handle(event, context):
+def handler(event, context):
     logger.info("exec_filter %s", event)
     response_body = {'error': 'Unprocessable Entity'}
     response_code = 422

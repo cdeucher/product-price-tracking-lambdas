@@ -15,7 +15,7 @@ QUEUE_NAME = os.environ.get('QUEUE_NAME', 'titles')
 table = boto3.resource('dynamodb').Table(TITLES_TABLE)
 sqs   = boto3.resource('sqs').get_queue_by_name(QueueName=QUEUE_NAME)
 
-def handle(event, context):
+def handler(event, context):
     body = event.get('body')
     headers = event.get('headers')
     logger.info("Headers: %s", headers)

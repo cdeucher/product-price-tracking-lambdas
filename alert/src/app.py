@@ -15,7 +15,7 @@ sqs   = boto3.resource('sqs').get_queue_by_name(QueueName=QUEUE_NAME)
 AWS_REGION = "us-east-1"
 sns_client = boto3.client("sns", region_name=AWS_REGION)
 
-def handle(event, context):
+def handler(event, context):
     logger.info("Event: %s", event)
 
     body = json.loads(event.get('Records')[0].get('body'))
