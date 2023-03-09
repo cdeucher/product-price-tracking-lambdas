@@ -8,12 +8,14 @@ logger.setLevel(logging.INFO)  # INFO
 
 
 def scrap(url):
+    try:
         logger.info("url %s", url)
         page = get_html_page(url)
         logger.info("page %s", page)
         price, title = scrape_html(page.text)
-
         return price, title
+    except Exception as e:
+        logger.exception(f'{e}.')
 
 
 def get_html_page(url):
@@ -34,5 +36,5 @@ def scrape_html(webpage):
 
 
 if __name__ == '__main__':
-    price, title = scrap("https://www.amazon.com.br/Mentes-perigosas-psicopata-comemorativa-anivers%C3%A1rio/dp/8525067326")
+    price, title = scrap("https://www.amazon.com.br/Apple-MacBook-14-polegadas-Processador-GPU-14%E2%80%91core/dp/B09L5CNDPC?ref_=Oct_DLandingS_D_0bc34d9c_61")
     logger.error("%s %s", price, title)

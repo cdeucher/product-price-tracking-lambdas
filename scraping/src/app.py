@@ -41,7 +41,7 @@ def update_from_cron_product(event):
         if float(new_price) <= float(product.get('price_target')):
             message(product, product.get('url')+" - Price changed to " + new_price)
 
-        msg, code = update_dynamo(product.get('url'), new_price, title, product.get('id'), product.get('event_id'))
+        msg, code = update_dynamo(product.get('id'), new_price, title)
 
         return msg, code
     except Exception as e:
@@ -53,7 +53,7 @@ def update_from_insert_product(event):
     try:
         url, id, eventID = dynamodb_stream_data(event)
         price, title = scrap(url)
-        item = update_dynamo(url, price, title, id, eventID)
+        item = update_dynamo(id, price, title)
         logger.info(f'Updated DynamoDB item {item}.')
         return {'updated': 'ok', 'productId': id}, 200
     except Exception as e:

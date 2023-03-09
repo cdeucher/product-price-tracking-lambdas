@@ -9,17 +9,16 @@ logger = logging.getLogger("lambda")
 logger.setLevel(logging.INFO)  # INFO
 
 
-def update_dynamo(url, price, title, id, event_id):
-    logger.info("update_item text:%s - price:%s - id:%s - event_id:%s", title, price, id, event_id)
+def update_dynamo(id, price, title):
+    logger.info("update_item text:%s - price:%s - id:%s", title, price, id)
     try:
         update = table.update_item(
             Key={
-                'site': url,
                 'id': id
             },
-            UpdateExpression="set title = :g, price = :p, event_id = :i",
+            UpdateExpression="set title = :g, price = :p",
             ExpressionAttributeValues={
-                ':g': title, ':p': price, ':i': event_id
+                ':g': title, ':p': price
             },
             ReturnValues="UPDATED_NEW"
         )

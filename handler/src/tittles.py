@@ -12,9 +12,6 @@ def get_titles(db_table):
         response = db_table.scan(
             FilterExpression=Attr('active').eq(1)
         )
-        # response = table.query(
-        #    KeyConditionExpression=Key('active').eq(1) & Key('site').eq('')
-        # )
         for item in response['Items']:
             titles.append({
                 'title': item['title'],
@@ -23,6 +20,7 @@ def get_titles(db_table):
                 'url': item['url'],
                 'type': item['type'],
                 'date': item['date'],
+                'image_url': item['image_url'],
                 'price_target': item['price_target'],
                 'id': item['id'] if 'id' in item else ''
             })
@@ -51,15 +49,15 @@ def save_title(db_table, title):
     db_table.put_item(
         Item={
             'id': id,
-            'site': title['url'],
-            'active': 1,
             'title': 'comming soon',
             'price': '',
             'symbol': '',
             'url': title['url'],
             'type': '',
             'date': date_now,
-            'price_target': title['price_target']
+            'price_target': title['price_target'],
+            'image_url': '',
+            'active': 1,
         }
     )
     return {'url': title['url'], 'id': id}
