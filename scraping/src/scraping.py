@@ -11,8 +11,8 @@ def scrap(url):
         logger.info("url %s", url)
         page = get_html_page(url)
         logger.info("page %s", page)
-        price, title = scrape_html(page.text, url)
-        return price, title
+        price, title, image = scrape_html(page.text, url)
+        return price, title, image
     except Exception as e:
         logger.exception(f'{e}.')
 
@@ -29,34 +29,42 @@ def scrape_html(webpage, url):
     soup = BeautifulSoup(webpage, "html.parser")
     dom = etree.HTML(str(soup))
     logger.info("dom %s", dom)
-    price, title = 0, "not supported yet"
+    price, title, image = 0, "not supported yet", ""
     if "amazon" in url:
-        price, title = amazon(dom)
+        price, title, image = amazon(dom)
     elif "kabum" in url:
-        price, title = kabum(dom)
+        price, title, image = kabum(dom)
 
-    return price, title
+    return price, title, image
 
 
 def kabum(dom):
-    container = dom.xpath('//*[contains(@class, "container-purchase")]')
-    title = container[0].xpath('//h1/text()')[0]
+    container = dom.xpath('//*[contains(@class, "container-purchase")]')[0]
+    title = container.xpath('//h1/text()')[0]
     logger.info("title %s", title)
-    price = container[0].xpath('//*[contains(@class, "finalPrice")]')[0].text
+    price = container.xpath('//*[contains(@class, "finalPrice")]')[0].text
     price = price.replace("R$", "").replace(".", "").replace(",", ".").replace(" ", "")
     logger.info("price %s", price)
-    return price, title
+
+    carousel = dom.xpath('//*[@id="carouselDetails"]')[0]
+    image = carousel.xpath('//div[@data-index="1"]//img/@src')[0]
+    logger.info("image %s", image)
+    return price, title, image
 
 
 def amazon(dom):
     price = dom.xpath('//*[@class="a-price-whole"]')[0].text
     title = dom.xpath('//*[@id="productTitle"]')[0].text
     logger.info("%s %s", price, title)
-    return price, title
+
+    image = dom.xpath('//*[@id="imageBlockThumbs"]//img/@src')[0]
+    logger.info("image %s", image)
+
+    return price, title, image
 
 
 if __name__ == '__main__':
-    price, title = scrap(
-        "https://www.kabum.com.br/produto/181088/processador-amd-ryzen-5-5600g-3-9ghz-4-4ghz-max-turbo-cache-19mb-6-nucleos-12-threads-video-integrado-am4-100-100000252box")
-    logger.error("%s %s", price, title)
+    price, title, image = scrap(
+        "https://www.kabum.com.br/produto/129653/placa-mae-asus-prime-a520m-e-amd-am4-matx-ddr4")
+    logger.error("%s %s %s", price, title, image)
     logger.error("end")
