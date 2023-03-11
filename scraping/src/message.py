@@ -13,11 +13,11 @@ AWS_REGION = "us-east-1"
 sns_client = boto3.client("sns", region_name=AWS_REGION)
 
 
-def message(product, message):
-    logger.info("Event: %s - Message: %s", product, message)
+def message(id, message) -> None:
+    logger.info("Product: %s - Message: %s", id, message)
 
     try:
-        topicArn = create_sns_message(product.get('id'), message)
+        topicArn = create_sns_message(id, message)
         logger.info("Response: %s", topicArn)
     except Exception as e:
         logger.exception(f'{e}.')

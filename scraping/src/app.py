@@ -39,7 +39,7 @@ def update_from_cron_product(event) -> (dict, int):
         logger.info("New price: %s - Title: %s", new_price, title)
 
         if float(new_price) <= float(product.get('price_target')):
-            message(product, product.get('url')+" - Price changed to " + new_price)
+            message(product.get('id'), product.get('url')+" - Price changed to " + new_price)
 
         msg, code = update_dynamo(product.get('id'), new_price, title, image)
 

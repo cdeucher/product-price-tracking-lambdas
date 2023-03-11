@@ -7,14 +7,11 @@ logger.setLevel(logging.INFO)  # INFO
 
 
 def scrap(url):
-    try:
-        logger.info("url %s", url)
-        page = get_html_page(url)
-        logger.info("page %s", page)
-        price, title, image = scrape_html(page.text, url)
-        return price, title, image
-    except Exception as e:
-        logger.exception(f'{e}.')
+    logger.info("url %s", url)
+    page = get_html_page(url)
+    logger.error("page %s", page)
+    price, title, image = scrape_html(page.text, url)
+    return price, title, image
 
 
 def get_html_page(url):
@@ -53,18 +50,31 @@ def kabum(dom):
 
 
 def amazon(dom):
-    price = dom.xpath('//*[@class="a-price-whole"]')[0].text
-    title = dom.xpath('//*[@id="productTitle"]')[0].text
-    logger.info("%s %s", price, title)
+    title = dom.xpath('//*[@id="productTitle"]')
+    logger.error("title - %s", len(title))
 
-    image = dom.xpath('//*[@id="imageBlockThumbs"]//img/@src')[0]
-    logger.info("image %s", image)
+    price = dom.xpath('//*[@class="a-price-whole"]')
+    if len(price) == 0:
+        price = dom.xpath('//*[@class="a-offscreen"]')
+    logger.error("price - %s", len(price))
 
-    return price, title, image
+    image = dom.xpath('//*[@id="imageBlockThumbs"]//img/@src')
+    if len(image) == 0:
+        image = dom.xpath('//*[@id="imageBlock"]//img/@src')
+    logger.error("image - %s", len(image))
+
+    if len(price) == 0 or len(title) == 0 or len(image) == 0:
+        raise Exception(f"scrapping error: price, title, image:{len(price)},{len(title)},{len(image)}")
+
+    return price[0].text, title[0].text, image[0]
 
 
 if __name__ == '__main__':
-    price, title, image = scrap(
-        "https://www.kabum.com.br/produto/129653/placa-mae-asus-prime-a520m-e-amd-am4-matx-ddr4")
-    logger.error("%s %s %s", price, title, image)
+    try:
+        price, title, image = scrap(
+            "https://www.amazon.com.br/Apple-MacBook-14-polegadas-Processador-GPU-14%E2%80%91core/dp/B09L5CNDPC?ref_=Oct_DLandingS_D_0bc34d9c_61")
+        logger.error("%s %s %s", price, title, image)
+    except Exception as e:
+        logger.error("starts error")
+        logger.exception(f'{e}.')
     logger.error("end")

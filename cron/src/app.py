@@ -49,14 +49,11 @@ def get_titles():
     )
     for item in response['Items']:
         titles.append({
-            'title': item['title'],
-            'price': item['price'],
-            'symbol': item['symbol'],
+            'price': str(item['price']),
             'url': item['url'],
-            'type': item['type'],
-            'date': item['date'],
-            'price_target': item['price_target'],
-            'id': item['id'] if 'id' in item else ''
+            'fails': str(item['fails']) if 'fails' in item else '0',
+            'price_target': str(item['price_target']),
+            'id': item['id']
         })
         send_message(json.dumps({"title":item['title'], "url":item['url'], "price_target":item['price_target'], "id":item['id']}))
     return titles
