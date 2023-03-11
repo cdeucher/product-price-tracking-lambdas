@@ -1,6 +1,18 @@
 ## Testing functions
+
+- Install dependencies
 ```bash
-$ pytest
+$ pip install -r dev-requirements.txt
 ```
 
-- Python + Boto3: https://dynobase.dev/dynamodb-python-with-boto3/
+- Run integration tests
+```bash
+$ cd scraping && ./use_localstack.sh
+$ cd scraping && pytest
+$ cd scraping && python -m pytest
+```
+
+- Run code coverage
+```bash
+$ cd scraping && python -m pytest --cov=src --cov-report=html
+```

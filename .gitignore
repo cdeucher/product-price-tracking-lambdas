@@ -1,4 +1,5 @@
+**/env
+.coverage
+**/.localstack/*
 .idea
-__pycache__
-**/*.zip
-env
+**/__pycache__/*

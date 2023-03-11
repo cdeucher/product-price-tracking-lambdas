@@ -1,4 +1,0 @@
-pytest
-boto3
-simplejson
-pyjwt

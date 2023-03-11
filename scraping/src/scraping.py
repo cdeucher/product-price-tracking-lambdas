@@ -9,8 +9,8 @@ logger.setLevel(logging.INFO)  # INFO
 def scrap(url):
     logger.info("url %s", url)
     page = get_html_page(url)
-    logger.error("page %s", page)
-    price, title, image = scrape_html(page.text, url)
+    logger.info("page %s", len(page))
+    price, title, image = scrape_html(page, url)
     return price, title, image
 
 
@@ -19,10 +19,11 @@ def get_html_page(url):
     HEADERS = ({
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36',
         'Accept-Language': 'en-US, en;q=0.5'})
-    return requests.get(url, headers=HEADERS)
+    return requests.get(url, headers=HEADERS).text
 
 
 def scrape_html(webpage, url):
+    logger.info("page %s", len(webpage))
     soup = BeautifulSoup(webpage, "html.parser")
     dom = etree.HTML(str(soup))
     logger.info("dom %s", dom)
@@ -37,31 +38,37 @@ def scrape_html(webpage, url):
 
 def kabum(dom):
     container = dom.xpath('//*[contains(@class, "container-purchase")]')[0]
-    title = container.xpath('//h1/text()')[0]
-    logger.info("title %s", title)
-    price = container.xpath('//*[contains(@class, "finalPrice")]')[0].text
-    price = price.replace("R$", "").replace(".", "").replace(",", ".").replace(" ", "")
-    logger.info("price %s", price)
+    title = container.xpath('//h1/text()')
+    logger.info("title - %s", len(title))
+
+    price = container.xpath('//*[contains(@class, "finalPrice")]')
+    logger.info("price - %s", len(price))
 
     carousel = dom.xpath('//*[@id="carouselDetails"]')[0]
-    image = carousel.xpath('//div[@data-index="1"]//img/@src')[0]
-    logger.info("image %s", image)
-    return price, title, image
+    image = carousel.xpath('//div[@data-index="1"]//img/@src')
+    logger.info("image - %s", len(image))
+
+    if len(price) == 0 or len(title) == 0 or len(image) == 0:
+        raise Exception(f"scrapping error: price, title, image:{len(price)},{len(title)},{len(image)}")
+
+    price = price[0].text.replace("R$", "").replace(".", "").replace(",", ".").replace(" ", "")
+
+    return price, title, image[0]
 
 
 def amazon(dom):
     title = dom.xpath('//*[@id="productTitle"]')
-    logger.error("title - %s", len(title))
+    logger.info("title - %s", len(title))
 
     price = dom.xpath('//*[@class="a-price-whole"]')
     if len(price) == 0:
         price = dom.xpath('//*[@class="a-offscreen"]')
-    logger.error("price - %s", len(price))
+    logger.info("price - %s", len(price))
 
     image = dom.xpath('//*[@id="imageBlockThumbs"]//img/@src')
     if len(image) == 0:
         image = dom.xpath('//*[@id="imageBlock"]//img/@src')
-    logger.error("image - %s", len(image))
+    logger.info("image - %s", len(image))
 
     if len(price) == 0 or len(title) == 0 or len(image) == 0:
         raise Exception(f"scrapping error: price, title, image:{len(price)},{len(title)},{len(image)}")
@@ -69,10 +76,17 @@ def amazon(dom):
     return price[0].text, title[0].text, image[0]
 
 
+def store_page(url):
+    html = get_html_page(url)
+    with open('example.txt', 'w') as f:
+        f.write(html)
+
+
 if __name__ == '__main__':
     try:
-        price, title, image = scrap(
-            "https://www.amazon.com.br/Apple-MacBook-14-polegadas-Processador-GPU-14%E2%80%91core/dp/B09L5CNDPC?ref_=Oct_DLandingS_D_0bc34d9c_61")
+        url = "https://www.kabum.com.br/produto/181088/processador-amd-ryzen-5-5600g-3-9ghz-4-4ghz-max-turbo-cache-19mb-6-nucleos-12-threads-video-integrado-am4-100-100000252box"
+        store_page(url)
+        price, title, image = scrap(url)
         logger.error("%s %s %s", price, title, image)
     except Exception as e:
         logger.error("starts error")

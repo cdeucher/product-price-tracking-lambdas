@@ -1,10 +1,8 @@
 import os
 import boto3
-from boto3.dynamodb.conditions import Key,Attr
+from boto3.dynamodb.conditions import Attr
 import json
 import logging
-import jwt
-from datetime import datetime;
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -13,7 +11,8 @@ TITLES_TABLE = os.environ.get('TITLES_TABLE', 'titles')
 QUEUE_NAME = os.environ.get('QUEUE_NAME', 'titles')
 
 table = boto3.resource('dynamodb').Table(TITLES_TABLE)
-sqs   = boto3.resource('sqs').get_queue_by_name(QueueName=QUEUE_NAME)
+sqs = boto3.resource('sqs').get_queue_by_name(QueueName=QUEUE_NAME)
+
 
 def handler(event, context):
     body = event.get('body')
@@ -42,21 +41,25 @@ def handler(event, context):
     logger.info("Response: %s", response)
     return response
 
+
 def get_titles():
     titles = []
     response = table.scan(
-         FilterExpression=Attr('active').eq(1)
+        FilterExpression=Attr('active').eq(1)
     )
     for item in response['Items']:
+        fails = str(item['fails']) if 'fails' in item else '0'
         titles.append({
             'price': str(item['price']),
             'url': item['url'],
-            'fails': str(item['fails']) if 'fails' in item else '0',
+            'fails': fails,
             'price_target': str(item['price_target']),
             'id': item['id']
         })
-        send_message(json.dumps({"title":item['title'], "url":item['url'], "price_target":item['price_target'], "id":item['id']}))
+        send_message(json.dumps(
+            {"title": item['title'], 'fails': fails, "url": item['url'], "price_target": item['price_target'], "id": item['id']}))
     return titles
+
 
 def send_message(message):
     response = sqs.send_message(MessageBody=message)

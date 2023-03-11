@@ -1,8 +1,8 @@
 import json
-import logging
 from scraping import scrap
 from message import message
 from dynamodb import update_dynamo, update_product
+import logging
 
 logger = logging.getLogger("lambda")
 logger.setLevel(logging.INFO)  # INFO
@@ -31,7 +31,9 @@ def handler(event, context) -> dict:
 
 def update_from_cron_product(event) -> (dict, int):
     logger.info("exec_filter %s", event)
-    product = json.loads(event.get('Records')[0].get('body'))
+    body: str = event.get('Records')[0].get('body')
+    logger.info("Body: %s", body)
+    product = json.loads(body)
     logger.info("Product: %s", product)
 
     try:
@@ -39,7 +41,7 @@ def update_from_cron_product(event) -> (dict, int):
         logger.info("New price: %s - Title: %s", new_price, title)
 
         if float(new_price) <= float(product.get('price_target')):
-            message(product.get('id'), product.get('url')+" - Price changed to " + new_price)
+            message(product.get('id'), product.get('url') + " - Price changed to " + new_price)
 
         msg, code = update_dynamo(product.get('id'), new_price, title, image)
 
@@ -47,7 +49,7 @@ def update_from_cron_product(event) -> (dict, int):
     except Exception as e:
         update_fails_product(product)
 
-        logger.exception(f'{e}.')
+        logger.error(f'{e}.')
         raise
 
 
@@ -80,3 +82,9 @@ def dynamodb_stream_data(event: dict) -> (str, str, str):
         id: str = d_data['id']['S']
 
         return url, id, record.get('eventID')
+
+if __name__ == '__main__':
+    file = open('tests/mock/fixtures/sqs-payload.json', 'r')
+    contents = file.read()
+    file.close()
+    handler(json.loads(contents), None)

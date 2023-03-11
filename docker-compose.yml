@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  localstack:
+    image: localstack/localstack:latest
+    environment:
+      - SERVICES=lambda,dynamodb,sqs,sns
+      - DEBUG=1
+    volumes:
+      - ".localstack:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    ports:
+      - '4574:4574' # Lambda
+      - '4566:4566' # DynamoDB
+      - '4576:4576' # SQS
+      - '4575:4575' # SNS

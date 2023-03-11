@@ -1,0 +1,9 @@
+{
+    "Records": [
+      {
+        "eventSource": "aws:sqs",
+        "messageId": "8a989426-d2b3-4b76-9a4c-b0e8175e9dfa",
+        "body":"{\"title\": \"comming soon\",\"fails\":\"3\", \"url\": \"https://www.amazon.com.br/dp/B0942NDQKL?m=A1ZZFT5FULY4LN&ref=psp_pc_a_A2WURVW8IZ862T\", \"price_target\": \"1\", \"id\": \"21032023025828\"}"
+      }
+    ]
+}

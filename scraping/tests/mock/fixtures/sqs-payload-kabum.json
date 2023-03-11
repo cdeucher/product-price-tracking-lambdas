@@ -1,0 +1,9 @@
+{
+    "Records": [
+      {
+        "eventSource": "aws:sqs",
+        "messageId": "8a989426-d2b3-4b76-9a4c-b0e8175e9dfa",
+        "body":"{\"title\": \"comming soon\",\"fails\":\"1\", \"url\": \"https://www.kabum.com.br/produto/129653/placa-mae-asus-prime-a520m-e-amd-am4-matx-ddr4\", \"price_target\": \"1\", \"id\": \"11032023025828\"}"
+      }
+    ]
+}

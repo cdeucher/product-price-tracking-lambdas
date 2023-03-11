@@ -7,10 +7,14 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 QUEUE_NAME = os.environ.get('QUEUE_NAME', 'titles')
-sqs = boto3.resource('sqs').get_queue_by_name(QueueName=QUEUE_NAME)
-
 AWS_REGION = "us-east-1"
-sns_client = boto3.client("sns", region_name=AWS_REGION)
+
+if os.environ.get('AWS_OFFLINE'):
+    sqs = boto3.resource('sqs', endpoint_url='http://localhost:4566').get_queue_by_name(QueueName=QUEUE_NAME)
+    sns_client = boto3.client("sns", region_name=AWS_REGION, endpoint_url='http://localhost:4575')
+else:
+    sqs = boto3.resource('sqs').get_queue_by_name(QueueName=QUEUE_NAME)
+    sns_client = boto3.client("sns", region_name=AWS_REGION)
 
 
 def message(id, message) -> None:
@@ -22,6 +26,7 @@ def message(id, message) -> None:
     except Exception as e:
         logger.exception(f'{e}.')
         raise
+
 
 def create_sns_message(id, message):
     send = 'Could not create SNS message ' + id
