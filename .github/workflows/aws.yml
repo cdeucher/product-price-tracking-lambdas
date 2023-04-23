@@ -35,7 +35,8 @@ jobs:
       - name: Package source code
         shell: bash
         run: |
-          for path_lambda in $(find . -maxdepth 1 -mindepth 1 -type d -name "[a-z]*"); do
+          #for path_lambda in $(find . -maxdepth 1 -mindepth 1 -type d -name "[a-z]*"); do
+          for path_lambda in $(echo "handler cron"); do
             lambda="${path_lambda##*\/}"
             lambda_name="${{ env.APP }}-${{ env.TYPE }}-${lambda}"
             cd "./${lambda}/src" && zip -r "${lambda_name}.zip" . && cd -
@@ -44,7 +45,8 @@ jobs:
       - name: Push to Lambda
         shell: bash
         run: |
-          for path_lambda in $(find . -maxdepth 1 -mindepth 1 -type d -name "[a-z]*"); do
+          #for path_lambda in $(find . -maxdepth 1 -mindepth 1 -type d -name "[a-z]*"); do
+          for path_lambda in $(echo "handler cron"); do
             lambda="${path_lambda##*\/}"
             lambda_name="${{ env.APP }}-${{ env.TYPE }}-${lambda}"
             cd "${path_lambda}/src" && \

@@ -2,7 +2,7 @@ import pytest
 
 @pytest.fixture
 def sqs_payload_kabum():
-    file = open('tests/mock/fixtures/sqs-payload-kabum.json', 'r')
+    file = open('mock/fixtures/sqs-payload-kabum.json', 'r')
     contents = file.read()
     file.close()
     return contents
@@ -10,7 +10,7 @@ def sqs_payload_kabum():
 
 @pytest.fixture
 def sqs_payload_amazon():
-    file = open('tests/mock/fixtures/sqs-payload-amazon.json', 'r')
+    file = open('mock/fixtures/sqs-payload-amazon.json', 'r')
     contents = file.read()
     file.close()
     return contents
@@ -18,7 +18,7 @@ def sqs_payload_amazon():
 
 @pytest.fixture
 def sqs_payload_amazon_fails():
-    file = open('tests/mock/fixtures/sqs-payload-amazon-3-fails.json', 'r')
+    file = open('mock/fixtures/sqs-payload-amazon-3-fails.json', 'r')
     contents = file.read()
     file.close()
     return contents
@@ -26,7 +26,7 @@ def sqs_payload_amazon_fails():
 
 @pytest.fixture
 def request_kabum_success():
-    file = open('tests/mock/fixtures/response-kabum-success.html', 'r')
+    file = open('mock/fixtures/response-kabum-success.html', 'r')
     contents = file.read()
     file.close()
     return contents
@@ -34,7 +34,7 @@ def request_kabum_success():
 
 @pytest.fixture
 def request_kabum_fail():
-    file = open('tests/mock/fixtures/response-request-kabum-fail.html', 'r')
+    file = open('mock/fixtures/response-request-kabum-fail.html', 'r')
     contents = file.read()
     file.close()
     return contents
@@ -42,7 +42,7 @@ def request_kabum_fail():
 
 @pytest.fixture
 def request_amazon_success():
-    file = open('tests/mock/fixtures/response-request-amazon-success.html', 'r')
+    file = open('mock/fixtures/response-request-amazon-success.html', 'r')
     contents = file.read()
     file.close()
     return contents
@@ -50,7 +50,7 @@ def request_amazon_success():
 
 @pytest.fixture
 def request_amazon_fail():
-    file = open('tests/mock/fixtures/response-request-amazon-fail.html', 'r')
+    file = open('mock/fixtures/response-request-amazon-fail.html', 'r')
     contents = file.read()
     file.close()
     return contents
