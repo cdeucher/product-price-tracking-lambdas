@@ -3,3 +3,5 @@
 **/.localstack/*
 .idea
 **/__pycache__/*
+**/vvend/*
+**/bin/*

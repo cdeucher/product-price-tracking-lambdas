@@ -1,7 +1,7 @@
 import json
-from scraping import scrap
 from message import message
 from dynamodb import update_dynamo, update_product
+from scraping import scrap
 import logging
 
 logger = logging.getLogger("lambda")
