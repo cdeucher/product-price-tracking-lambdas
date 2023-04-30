@@ -95,7 +95,7 @@ def amazon(dom):
         image = dom.xpath('//*[@id="imageBlock"]//img/@src')
     logger.info("image - %s", len(image))
 
-    if len(price) == 0 or len(title) == 0 or len(image) == 0:
+    if len(price) == 0 or len(title) == 0: #or len(image) == 0:
         raise Exception(f"scrapping error: price, title, image:{len(price)},{len(title)},{len(image)}")
 
     return price[0].text, title[0].text, image[0]
