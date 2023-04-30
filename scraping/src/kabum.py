@@ -18,6 +18,7 @@ class Kabum(Scraper):
         self.find_image()
         self.find_price()
         self.find_title()
+        self.browser.quit()
 
         if not all((self.price, self.title, self.image)):
             raise Exception(f"scrapping error: price, title, image:{len(self.price)},{len(self.title)},{len(self.image)}")

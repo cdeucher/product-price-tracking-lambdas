@@ -3,8 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.utils import ChromeType
+from selenium.webdriver.firefox.options import Options
 
 logger = logging.getLogger("lambda")
 logger.setLevel(logging.INFO)  # INFO
@@ -15,21 +14,34 @@ class Scraper:
         self.url = url
         self.wait = None
         self.browser = None
-        self.options = webdriver.ChromeOptions()
+        self.options = Options()
+
         self.bootsrap()
         self.load_page()
 
     def bootsrap(self):
-        self.options.add_argument("--window-size=1920,1080")
         self.options.add_argument("--headless")
         self.options.add_argument("--disable-gpu")
         self.options.add_argument("--no-sandbox")
         self.options.add_argument("--disable-dev-shm-usage")
+        self.options.add_argument("--window-size=1920,1080")
+        self.options.add_argument("--disable-setuid-sandbox")
+        self.options.add_argument('--disable-dev-tools')
+        self.options.add_argument('--user-data-dir=/tmp/chrome-user-data')
+        self.options.add_argument('--disk-cache-dir=/tmp/cache-dir')
+        self.options.add_argument('--single-process')
+        self.options.add_argument('--ignore-certificate-errors')
+        self.options.add_argument('--start-maximized')
+        self.options.add_argument('--debug')
         self.options.add_argument(
-            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
-        self.browser = webdriver.Chrome(executable_path=self.get_executable_path(),
-                                        options=self.options)
-        self.wait = WebDriverWait(self.browser, 10)  # Wait for 10 seconds
+            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
+        )
+        # self.options.binary_location = r"C:\Program Files\Mozilla Firefox\firefox.exe"
+        self.options.binary_location = r"/usr/bin/firefox"
+        self.browser = webdriver.Firefox(executable_path=self.get_firefox_executable_path()
+                                         , options=self.options
+                                         , service_log_path='/tmp/geckodriver.log')
+        self.wait = WebDriverWait(self.browser, 10)
 
     # endDef
 
@@ -39,20 +51,15 @@ class Scraper:
 
     # endDef
 
-    def get_executable_path(self) -> str:
-        # ChromeDriverManager(chrome_type=ChromeType.GOOGLE).install()
-        # export GOOGLE_CHROME_DRIVER = '/tmp/chromedriver'
+    def get_firefox_executable_path(self) -> str:
         try:
-            if 'GOOGLE_CHROME_DRIVER' in os.environ:
-                logger.info("GOOGLE_CHROME_DRIVER %s", os.environ.get("GOOGLE_CHROME_DRIVER"))
-                return os.environ.get("GOOGLE_CHROME_DRIVER")
-            elif os.path.exists("/usr/bin/chromedriver"):
-                return "/usr/bin/chromedriver"
-            else:
-                return ChromeDriverManager(chrome_type=ChromeType.GOOGLE).install()
+            if 'FIREFOX_DRIVER' in os.environ:
+                logger.info("FIREFOX_DRIVER %s", os.environ.get("FIREFOX_DRIVER"))
+                return os.environ.get("FIREFOX_DRIVER")
+            elif os.path.exists("/usr/bin/geckodriver"):
+                return "/usr/bin/geckodriver"
         except Exception as e:
             logger.error("error %s", e)
-
 
 """
     def scrap(url):
